@@ -1,0 +1,49 @@
+import numpy as np
+import matplotlib.pyplot as plt
+
+# === Configuration ===
+dos_file = "Zr6CoTe2.dos"       # <-- Change to your DOS file name
+fermi_energy = 14.1566            # <-- Replace with your Fermi level
+
+# === Set Fonts and Styles ===
+plt.rcParams['font.family'] = 'Times New Roman'
+plt.rcParams['font.size'] = 20  # tick labels
+
+# === Load DOS Data ===
+data = np.loadtxt(dos_file, comments="#")
+energy = data[:, 0]
+dos = data[:, 1]
+
+# === Shift energy to align Fermi level at 0 eV ===
+energy_shifted = energy - fermi_energy
+
+# === Create plot ===
+fig, ax = plt.subplots(figsize=(7, 8))
+
+# Fill and plot
+ax.fill_between(energy_shifted, dos, color='lightgreen', alpha=0.6)
+ax.plot(energy_shifted, dos, color='#ff7f0e', linewidth=1.2)
+
+# Add Fermi level line
+ax.axvline(0, color='blue', linestyle='--', linewidth=2)
+
+# Axis labels
+ax.set_xlabel("Energy (eV)", fontsize=32, labelpad=12)
+ax.set_ylabel("DOS (eV$^{-1}$)", fontsize=32, labelpad=12)
+ax.set_title("(a) Zr$_6$CoTe$_2$", fontsize=32, pad=12)
+
+# Ticks and limits
+ax.tick_params(axis='both', labelsize=20, pad=10)
+
+ # Optional: adjust according to your data
+ax.set_xlim(-50, 20)   
+
+# Custom x-tick spacing every 20 units
+ax.set_xticks(np.arange(-50, 30, 10))
+# Start Y-axis from zero
+ax.set_ylim(bottom=0)
+
+# Save and show
+plt.tight_layout()
+plt.savefig('Zr6CoTe2_DOS.png', dpi=300)
+plt.show()
