@@ -1,0 +1,43 @@
+import numpy as np
+import matplotlib.pyplot as plt
+from scipy.interpolate import make_interp_spline
+from matplotlib.ticker import FormatStrFormatter
+
+# Set global font
+plt.rcParams['font.family'] = 'Times New Roman'
+plt.rcParams['font.size'] = 20  # for tick labels and legend
+
+# Input data
+volume = np.array([1230.7958, 1244.1624, 1257.6179, 1271.1625, 1284.796,
+                   1298.5204, 1312.3342, 1326.2383, 1340.2329, 1354.3184])
+
+energy = np.array([-702.3868812, -702.391947, -702.3956566, -702.3980489, 
+                   -702.3991864, -702.3991013, -702.3978482, -702.3954896, 
+                   -702.3920256, -702.3875186])
+
+# Interpolate
+volume_smooth = np.linspace(volume.min(), volume.max(), 300)
+spline = make_interp_spline(volume, energy, k=3)
+energy_smooth = spline(volume_smooth)
+
+# Plotting
+fig, ax = plt.subplots(figsize=(7, 8))
+ax.plot(volume, energy, 'o', label='DFT Points', color='#ff7f0e')
+ax.plot(volume_smooth, energy_smooth, '-', label='Spline Interpolation', color='#ff7f0e')
+
+# Apply spacing and formatting to all labels
+ax.set_xlabel("Volume ((a.u)$^3$)", fontsize=32, labelpad=12) 
+ax.set_ylabel("Energy (Ry)", fontsize=32, labelpad=12)        
+ax.set_title("(a) Zr$_6$CoTe$_2$", fontsize=32, pad=12)       
+
+# Custom x-tick spacing every 20 units
+ax.set_xticks(np.arange(1230, 1360, 20))
+
+# Ticks and formatting
+# Set spacing between ticks and the axis (major tick padding)
+plt.tick_params(axis='both', which='major', pad=10, labelsize=20)
+ax.yaxis.set_major_formatter(FormatStrFormatter('%.3f'))
+
+plt.tight_layout()
+plt.savefig("Zr6CoTe2.png", dpi=300)
+plt.show()
