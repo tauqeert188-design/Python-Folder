@@ -1,0 +1,48 @@
+import numpy as np
+import matplotlib.pyplot as plt
+
+# Load data (assuming columns: k-point, spin-up, spin-down)
+data = np.loadtxt('BAND.dat')
+
+x = data[:, 0]
+spin_up = data[:, 1] + 0.22
+spin_down = data[:, 2] + 0.22
+
+# Plot limits
+plt.xlim(0, 3.5619)
+plt.ylim(-8, 4)
+
+# Updated high-symmetry points
+high_sym_points = [0.0000, 0.7165, 1.0268, 1.9576, 2.8351, 3.1934, 3.5516]
+high_sym_labels = [r"$\Gamma$", "X", r"$U{\mid}K$", r"$\Gamma$", "L", "W", "X"]
+
+# Vertical lines at high-symmetry points
+for xline in high_sym_points:
+    plt.axvline(x=xline, color='black', linestyle='-')
+
+# Fermi level
+plt.axhline(0, color='black', linestyle='--', linewidth=2.5)
+
+# Set x and y ticks
+plt.xticks(high_sym_points, high_sym_labels, fontsize=14)
+plt.yticks(fontsize=14)
+
+# Plot spin-resolved bands
+plt.plot(x, spin_up, linestyle='-', color='#1f77b4', label='Spin Up', linewidth=1.5)
+plt.plot(x, spin_down, linestyle='--', color='#ff7f0e', label='Spin Down', linewidth=1.5)
+
+# Labels
+plt.xlabel("Wave Vector", fontsize=14, fontweight='bold')
+plt.ylabel("Energy (eV)", fontsize=14, fontweight='bold')
+
+# Panel title
+plt.title("(b) MnNbRu$_2$", fontsize=14, loc='center', fontweight='bold')
+
+# Legend in bottom-right corner
+plt.legend(loc="lower right", fontsize=12)
+
+# Save and show
+plt.savefig("MnNbRu2_spin.png", format="png", dpi=300)
+plt.show()
+
+

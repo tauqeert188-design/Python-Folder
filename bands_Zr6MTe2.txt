@@ -1,0 +1,93 @@
+
+import numpy as np
+import matplotlib.pyplot as plt
+
+# 1. Read and parse bands.dat file
+filename = 'Zr6CoTe2.dat'
+with open(filename, 'r') as f:
+    lines = f.readlines()
+
+k_points = []
+bands = []
+current_bands = []
+
+for line in lines:
+    tokens = line.strip().split()
+    if not tokens or '&' in line:
+        continue
+    if len(tokens) == 3:
+        if current_bands:
+            flat = [val for row in current_bands for val in row]
+            bands.append(flat)
+            current_bands = []
+        k_points.append([float(x) for x in tokens])
+    else:
+        current_bands.append([float(val) for val in tokens])
+
+# Set global font to Times New Roman and size for ticks/legend
+plt.rcParams['font.family'] = 'Times New Roman'
+plt.rcParams['font.size'] = 20  # for ticks, legend, etc.
+
+# Append last block
+if current_bands:
+    flat = [val for row in current_bands for val in row]
+    bands.append(flat)
+
+# 2. Convert to numpy arrays
+k_points = np.array(k_points)
+bands = np.array(bands)
+
+# 3. Calculate cumulative k-point distance
+k_distances = [0.0]
+for i in range(1, len(k_points)):
+    dk = np.linalg.norm(k_points[i] - k_points[i - 1])
+    k_distances.append(k_distances[-1] + dk)
+k_distances = np.array(k_distances)
+
+# 4. Shift energy levels by Fermi level
+fermi_level = 14.15  # update if needed
+shifted_bands = bands - fermi_level
+
+# 5. Plot band structure
+plt.figure(figsize=(6, 8))
+
+for band in range(shifted_bands.shape[1]):
+    plt.plot(k_distances, shifted_bands[:, band], color='#ff7f0e', linewidth=1.5)
+
+# High-symmetry points and labels
+high_sym_points = [0.0000, 0.5774, 0.9107, 1.5774, 2.6477, 3.2251, 3.5584, 4.2251, 5.2954, 4.2251, 5.2954, 6.3658]
+high_sym_labels = [r"$\Gamma$", "M", "K", r"$\Gamma$", "A", "L", "H", "A", "L", "M", "K", "H"]
+
+# Vertical lines at high-symmetry points
+for xline in high_sym_points:
+    plt.axvline(x=xline, color='black', linestyle='-', linewidth=0.8)
+
+# Fermi level line
+plt.axhline(0, color='blue', linestyle='--', linewidth=2.5)
+
+#Plot
+plt.ylabel("Energy (eV)", fontsize=32, labelpad=12)
+plt.xlabel("K-Points", fontsize=32, labelpad=12)
+plt.title("(a) Zr$_6$CoTe$_2$", fontsize=32, pad=12)
+
+# Ticks and labels
+plt.xticks(high_sym_points, high_sym_labels, fontsize=20)
+plt.yticks(fontsize=20)
+plt.tick_params(axis='both', which='major', pad=10, labelsize=20)
+
+# Ensure the last x-tick is visible
+plt.xlim(k_distances[0], high_sym_points[-1] + 0.05)
+plt.ylim(-6, 6)
+
+plt.grid(True)
+plt.tight_layout()
+
+# Save and show
+plt.savefig("Zr6CoTe2_Bands.png", dpi=300)
+plt.show()
+
+
+
+
+
+
