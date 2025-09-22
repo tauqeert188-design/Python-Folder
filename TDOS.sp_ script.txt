@@ -1,0 +1,72 @@
+import numpy as np
+import matplotlib.pyplot as plt
+from matplotlib.lines import Line2D
+
+plt.rcParams["font.family"] = "Times New Roman"
+
+fermi_energy = 13.555   # set your Fermi level here
+
+# --- Total DOS ---
+tdos_file = "Zr6MnTe2.pdos.pdos_tot"
+tdos = np.loadtxt(tdos_file, comments="#")
+energy = tdos[:,0] - fermi_energy
+tdos_up = tdos[:,1]
+tdos_dn = tdos[:,2]
+
+plt.figure(figsize=(6, 6))
+
+# Fill background for TDOS
+plt.fill_between(energy, tdos_up, -tdos_dn, color="limegreen", alpha=0.7)
+plt.plot(energy, tdos_up, color="black", linewidth=1.5)
+plt.plot(energy, -tdos_dn, color="black", linewidth=1.5)
+
+# --- PDOS contributions ---
+pdos_files = {
+    "Mn (d)": ("Zr6MnTe2.pdos.pdos_atm#7(Mn)_wfc#4(d)", "red"),
+    "Zr (d)": ("Zr6MnTe2.pdos.pdos_atm#1(Zr)_wfc#5(d)", "yellow"),
+    "Te (p)": ("Zr6MnTe2.pdos.pdos_atm#8(Te)_wfc#2(p)", "blue"),
+}
+
+for label, (fname, color) in pdos_files.items():
+    d = np.loadtxt(fname, comments="#")
+    e = d[:,0] - fermi_energy
+    up = d[:,1]
+    dn = d[:,2]
+
+    plt.fill_between(e, up, 0, color=color, alpha=0.3)
+    plt.fill_between(e, -dn, 0, color=color, alpha=0.3)
+    plt.plot(e, up, color=color, lw=1.5, label=label)
+    plt.plot(e, -dn, color=color, lw=1.5)
+
+# --- Reference lines ---
+plt.axhline(0, color="black", lw=0.8)
+plt.axvline(0, color="blue", linestyle="--", lw=1.5, label="Fermi Level")
+
+# --- Labels & ticks ---
+plt.title("(a) Zr$_6$MnTe$_2$", fontsize=32, pad=12)
+plt.xlabel("Energy (eV)", fontsize=32, labelpad=12)
+plt.ylabel("DOS (states/eV)", fontsize=32, labelpad=12)
+
+# Tick spacing
+plt.xticks(np.arange(-8, 5, 2), fontsize=20)   # -7 to +3 with step 1
+plt.yticks(np.arange(-9, 10, 3), fontsize=20)  # -9 to +9 with step 2
+plt.tick_params(axis='both', which='major', pad=10, labelsize=20)
+
+# Axis limits (extend slightly so last ticks are fully visible)
+plt.xlim(-8.2, 4.2)
+plt.ylim(-9.2, 9.2)
+
+# --- Custom Legend ---
+legend_lines = [
+    Line2D([0], [0], color="limegreen", lw=2, label="Total DOS"),
+    Line2D([0], [0], color="red", lw=2, label="Mn (d)"),
+    Line2D([0], [0], color="yellow", lw=2, label="Zr (d)"),
+    Line2D([0], [0], color="blue", lw=2, label="Te (p)")
+]
+
+plt.legend(handles=legend_lines, fontsize=14, frameon=False, loc="upper left")
+
+# --- Save & Show ---
+plt.tight_layout()
+plt.savefig("Zr6MnTe2_TDOS.png", dpi=300)
+plt.show()

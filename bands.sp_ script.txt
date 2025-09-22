@@ -1,0 +1,84 @@
+import re
+import numpy as np
+import matplotlib.pyplot as plt
+
+# Optional: enforce Times New Roman if installed
+# plt.rcParams["font.family"] = "Times New Roman"
+
+file_up = "Zr6MnTe2.sp.up.dat"
+file_dn = "Zr6MnTe2.sp.dn.dat"
+fermi_e = 13.555  # eV
+
+def parse_datplot(path):
+    with open(path, "r") as f:
+        lines = f.read().splitlines()
+    m_nbnd = re.search(r'nbnd=\s*(\d+)', lines[0])
+    m_nks  = re.search(r'nks=\s*(\d+)',  lines[0])
+    nbnd = int(m_nbnd.group(1)); nks = int(m_nks.group(1))
+    kp_re = re.compile(r'^\s*[-+]?\d*\.?\d+(?:[Ee][-+]?\d+)?\s+[-+]?\d*\.?\d+(?:[Ee][-+]?\d+)?\s+[-+]?\d*\.?\d+(?:[Ee][-+]?\d+)?\s*$')
+    kpts, bands = [], []
+    i = 1
+    while i < len(lines) and len(kpts) < nks:
+        if kp_re.match(lines[i]):
+            kpt = np.fromstring(lines[i], sep=' '); i += 1
+            vals = []
+            while i < len(lines) and not kp_re.match(lines[i]):
+                if lines[i].strip():
+                    vals += [float(x) for x in lines[i].split()]
+                i += 1
+            kpts.append(kpt); bands.append(vals)
+        else:
+            i += 1
+    return np.array(kpts), np.array(bands)
+
+def kpath_distance(kpts):
+    s = np.zeros(len(kpts))
+    if len(kpts) > 1:
+        s[1:] = np.cumsum(np.linalg.norm(np.diff(kpts, axis=0), axis=1))
+    return s
+
+# Load and align by EF
+k_up, E_up = parse_datplot(file_up); s_up = kpath_distance(k_up); E_up -= fermi_e
+k_dn, E_dn = parse_datplot(file_dn); s_dn = kpath_distance(k_dn); E_dn -= fermi_e
+
+# --------------------------
+# High-symmetry points (your list)
+# --------------------------
+high_sym_points = [0.0000, 0.5774, 0.9107, 1.5774, 2.6453, 3.2226, 3.5560,
+                   4.2226, 4.2226, 5.2906, 5.2906, 6.3585]
+high_sym_labels = [r"$\Gamma$", "M", "K", r"$\Gamma$", "A", "L", "H",
+                   "A", "L", "M", "K", "H"]
+
+# --- Plot ---
+plt.figure(figsize=(6,6))
+
+# Spin Up (solid blue)
+for b in range(E_up.shape[1]):
+    plt.plot(s_up, E_up[:, b], '-', color='#1f77b4', lw=2,
+             label='Spin Up' if b == 0 else "")
+
+# Spin Down (dashed orange)
+for b in range(E_dn.shape[1]):
+    plt.plot(s_dn, E_dn[:, b], '-', color='#ff7f0e', lw=2,
+             label='Spin Down' if b == 0 else "")
+
+# Fermi level
+plt.axhline(0.0, ls='--', c='blue', lw=2)
+
+# Vertical lines & ticks at high-symmetry points
+for x in high_sym_points:
+    plt.axvline(x, color='black', lw=1)
+
+plt.xticks(high_sym_points, high_sym_labels, fontsize=20)
+
+# Labels & styling
+plt.title("(a) Zr$_6$MnTe$_2$", fontsize=24, pad=10)
+plt.ylabel("Energy (eV)", fontsize=24)
+plt.ylim(-3, 3)
+plt.xlim(0, max(high_sym_points))  # show all 12 symmetry points
+plt.tick_params(axis='both', which='major', pad=10, labelsize=20)
+plt.legend(fontsize=16, frameon=False, loc='upper right')
+
+plt.tight_layout()
+plt.savefig("Zr6MnTe2_sp_bands.png", dpi=300)
+plt.show()
